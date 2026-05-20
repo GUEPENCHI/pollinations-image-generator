@@ -4,331 +4,359 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Image Generator — Pollinations</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#080810">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #080810;
-      color: #f0f0f0;
-      font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 36px 16px 60px;
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080810;--card:#12121e;--border:#1e1e30;--border2:#2a2a40;
+      --text:#f0f0f0;--muted:#666;--accent:#818cf8;--accent2:#c084fc;
+      --green:#34d399;--red:#f87171;
     }
-    h1 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      background: linear-gradient(90deg, #c084fc, #818cf8, #38bdf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 4px;
-    }
-    .subtitle { color: #666; font-size: 0.85rem; margin-bottom: 28px; }
-    .container { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 14px; }
-
-    .card {
-      background: #12121e;
-      border: 1px solid #1e1e30;
-      border-radius: 18px;
-      padding: 22px;
-    }
-    .card-title { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
-
-    textarea {
-      width: 100%;
-      background: #0a0a14;
-      border: 1px solid #2a2a40;
-      border-radius: 12px;
-      color: #f0f0f0;
-      font-size: 1rem;
-      padding: 14px;
-      resize: vertical;
-      min-height: 100px;
-      outline: none;
-      transition: border-color 0.2s;
-      line-height: 1.5;
-    }
-    textarea:focus { border-color: #818cf8; }
-
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
-
-    select {
-      background: #0a0a14;
-      border: 1px solid #2a2a40;
-      border-radius: 10px;
-      color: #f0f0f0;
-      padding: 10px 14px;
-      font-size: 0.88rem;
-      outline: none;
-      cursor: pointer;
-    }
-    select:focus { border-color: #818cf8; }
-
-    .toggle-group { display: flex; gap: 8px; }
-    .toggle {
-      background: #0a0a14;
-      border: 1px solid #2a2a40;
-      border-radius: 8px;
-      color: #888;
-      padding: 8px 14px;
-      font-size: 0.82rem;
-      cursor: pointer;
-      transition: all 0.15s;
-      user-select: none;
-    }
-    .toggle.on { background: #1e1040; border-color: #818cf8; color: #c084fc; }
-
-    .btn-gen {
-      margin-left: auto;
-      background: linear-gradient(135deg, #7c3aed, #2563eb);
-      border: none;
-      border-radius: 12px;
-      color: white;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: 700;
-      padding: 12px 32px;
-      transition: opacity 0.2s, transform 0.1s;
-      letter-spacing: 0.02em;
-    }
-    .btn-gen:hover { opacity: 0.88; transform: translateY(-1px); }
-    .btn-gen:active { transform: translateY(0); }
-    .btn-gen:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-    /* Presets */
-    .presets { display: flex; gap: 8px; flex-wrap: wrap; }
-    .preset {
-      background: #0a0a14;
-      border: 1px solid #1e1e30;
-      border-radius: 20px;
-      color: #aaa;
-      padding: 6px 14px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .preset:hover { border-color: #818cf8; color: #c084fc; }
-
-    /* Output */
-    .output-area { width: 100%; max-width: 800px; margin-top: 4px; }
-    .status-bar {
-      text-align: center;
-      color: #666;
-      font-size: 0.88rem;
-      margin-bottom: 12px;
-      min-height: 20px;
-    }
-    .img-wrapper {
-      background: #0a0a14;
-      border: 1px solid #1e1e30;
-      border-radius: 18px;
-      overflow: hidden;
-      min-height: 240px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    #output-img { width: 100%; display: none; border-radius: 18px; }
-
-    .spinner {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-    .spin-ring {
-      width: 48px; height: 48px;
-      border: 3px solid #1e1e30;
-      border-top-color: #818cf8;
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-    }
-    .spin-text { color: #555; font-size: 0.85rem; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .actions { display: flex; gap: 10px; margin-top: 12px; justify-content: center; }
-    .btn-action {
-      background: #12121e;
-      border: 1px solid #1e1e30;
-      border-radius: 10px;
-      color: #888;
-      cursor: pointer;
-      font-size: 0.85rem;
-      padding: 9px 20px;
-      text-decoration: none;
-      transition: all 0.15s;
-      display: none;
-    }
-    .btn-action:hover { border-color: #818cf8; color: #c084fc; }
-    .badge { display: inline-block; background: #1e1040; color: #818cf8; border-radius: 6px; font-size: 0.7rem; padding: 2px 7px; margin-left: 6px; vertical-align: middle; }
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;padding:28px 16px 80px}
+    h1{font-size:2rem;font-weight:800;background:linear-gradient(90deg,#c084fc,#818cf8,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px}
+    .subtitle{color:var(--muted);font-size:.82rem;margin-bottom:24px}
+    .wrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+    .label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+    textarea{width:100%;background:#0a0a14;border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:.95rem;padding:12px;resize:vertical;outline:none;transition:border-color .2s;line-height:1.5}
+    textarea:focus{border-color:var(--accent)}
+    textarea.neg{min-height:52px;color:var(--red);border-color:#3a1a1a}
+    textarea.neg:focus{border-color:var(--red)}
+    textarea.neg::placeholder{color:#6b3535}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+    select,input[type=number],input[type=text]{background:#0a0a14;border:1px solid var(--border2);border-radius:10px;color:var(--text);padding:9px 13px;font-size:.85rem;outline:none}
+    select:focus,input:focus{border-color:var(--accent)}
+    input[type=number]{width:110px}
+    .seed-row{display:flex;gap:8px;align-items:center;flex:1;min-width:160px}
+    .seed-row label{color:var(--muted);font-size:.82rem;white-space:nowrap}
+    .seed-row input{flex:1}
+    .btn-rand{background:#1a1a2e;border:1px solid var(--border2);border-radius:8px;color:var(--muted);cursor:pointer;font-size:.8rem;padding:9px 10px;transition:all .15s}
+    .btn-rand:hover{color:var(--accent);border-color:var(--accent)}
+    .toggles{display:flex;gap:8px;flex-wrap:wrap}
+    .tog{background:#0a0a14;border:1px solid var(--border2);border-radius:8px;color:var(--muted);padding:8px 13px;font-size:.8rem;cursor:pointer;transition:all .15s;user-select:none}
+    .tog.on{background:#1e1040;border-color:var(--accent);color:var(--accent2)}
+    .btn-gen{margin-left:auto;background:linear-gradient(135deg,#7c3aed,#2563eb);border:none;border-radius:12px;color:#fff;cursor:pointer;font-size:.95rem;font-weight:700;padding:11px 28px;transition:opacity .2s,transform .1s}
+    .btn-gen:hover{opacity:.88;transform:translateY(-1px)}
+    .btn-gen:active{transform:translateY(0)}
+    .btn-gen:disabled{opacity:.35;cursor:not-allowed;transform:none}
+    .presets{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+    .preset{background:#0a0a14;border:1px solid var(--border);border-radius:20px;color:#aaa;padding:5px 13px;font-size:.78rem;cursor:pointer;transition:all .15s}
+    .preset:hover{border-color:var(--accent);color:var(--accent2)}
+    /* Count selector */
+    .count-btns{display:flex;gap:4px}
+    .cbtn{background:#0a0a14;border:1px solid var(--border2);border-radius:8px;color:var(--muted);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;font-weight:600;transition:all .15s}
+    .cbtn.on{background:#1e1040;border-color:var(--accent);color:var(--accent2)}
+    /* Output grid */
+    .out-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    .status-bar{color:var(--muted);font-size:.85rem}
+    .img-grid{display:grid;gap:12px}
+    .img-grid.n1{grid-template-columns:1fr}
+    .img-grid.n2{grid-template-columns:1fr 1fr}
+    .img-grid.n4{grid-template-columns:1fr 1fr}
+    @media(max-width:600px){.img-grid.n2,.img-grid.n4{grid-template-columns:1fr}}
+    .img-cell{background:#0a0a14;border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;min-height:160px;display:flex;flex-direction:column}
+    .img-cell img{width:100%;display:block;border-radius:14px 14px 0 0}
+    .cell-spin{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px}
+    .spin-ring{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
+    .spin-txt{color:var(--muted);font-size:.8rem}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .cell-info{padding:10px 12px;display:flex;gap:8px;align-items:center;background:#0d0d1a}
+    .seed-badge{background:#1e1e35;border-radius:6px;color:var(--accent);font-size:.72rem;padding:3px 8px;cursor:pointer;transition:background .15s}
+    .seed-badge:hover{background:#2a2a50}
+    .cell-actions{margin-left:auto;display:flex;gap:6px}
+    .ic-btn{background:transparent;border:1px solid var(--border2);border-radius:8px;color:var(--muted);cursor:pointer;font-size:.8rem;padding:5px 10px;text-decoration:none;transition:all .15s}
+    .ic-btn:hover{border-color:var(--accent);color:var(--accent2)}
+    /* Gallery */
+    .gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+    .gal-item{background:#0a0a14;border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+    .gal-item:hover{border-color:var(--accent)}
+    .gal-item img{width:100%;display:block;aspect-ratio:1;object-fit:cover}
+    .gal-meta{padding:7px 9px;font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .gal-empty{color:var(--muted);font-size:.85rem;padding:20px 0;text-align:center}
+    .gal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .btn-clear{background:transparent;border:1px solid #3a1a1a;border-radius:8px;color:#6b3535;cursor:pointer;font-size:.78rem;padding:5px 12px;transition:all .15s}
+    .btn-clear:hover{border-color:var(--red);color:var(--red)}
+    /* Modal */
+    .modal{display:none;position:fixed;inset:0;background:#000a;z-index:100;align-items:center;justify-content:center;padding:20px}
+    .modal.open{display:flex}
+    .modal-inner{background:var(--card);border:1px solid var(--border);border-radius:18px;max-width:860px;width:100%;max-height:90vh;overflow-y:auto;padding:20px}
+    .modal-inner img{width:100%;border-radius:12px;margin-bottom:14px}
+    .modal-prompt{font-size:.85rem;color:#aaa;margin-bottom:10px;line-height:1.5}
+    .modal-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .modal-close{position:absolute;top:16px;right:20px;background:transparent;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer}
   </style>
 </head>
 <body>
+<div style="max-width:900px;margin:0 auto 16px">
   <h1>✦ Image Generator</h1>
   <p class="subtitle">Pollinations AI · flux · Gratuit · Illimité</p>
+</div>
 
-  <div class="container">
+<div class="wrap">
+  <!-- Prompt -->
+  <div class="card">
+    <div class="label">Prompt</div>
+    <textarea id="prompt" rows="3" placeholder="Décris l'image… Ex: portrait of a woman in a dark forest, cinematic lighting, 8k"></textarea>
+    <div style="margin-top:10px">
+      <div class="label">Negative prompt <span style="color:#6b3535">(ce qu'on ne veut pas)</span></div>
+      <textarea id="neg" class="neg" rows="2" placeholder="blurry, ugly, watermark, bad anatomy, low quality, deformed..."></textarea>
+    </div>
+    <div class="presets">
+      <span class="preset" onclick="ap('cinematic lighting, photorealistic, 8k, sharp focus, professional')">📷 Photo</span>
+      <span class="preset" onclick="ap('digital art, concept art, artstation, highly detailed, trending')">🎨 Digital Art</span>
+      <span class="preset" onclick="ap('anime style, vibrant colors, studio ghibli, beautiful')">🌸 Anime</span>
+      <span class="preset" onclick="ap('cyberpunk, neon lights, futuristic city, blade runner 2049')">🌆 Cyberpunk</span>
+      <span class="preset" onclick="ap('oil painting, impressionist, museum quality, brushstrokes')">🖼️ Peinture</span>
+      <span class="preset" onclick="ap('fantasy art, epic, magical, ethereal, mystical forest')">✨ Fantasy</span>
+      <span class="preset" onclick="ap('minimalist, clean, white background, product photography')">⬜ Minimal</span>
+      <span class="preset" onclick="ap('3d render, octane render, hyperrealistic, subsurface scattering')">🔷 3D</span>
+      <span class="preset" onclick="ap('dark academia, moody, vintage, film grain, bokeh')">🌑 Dark</span>
+      <span class="preset" onclick="ap('watercolor, soft colors, dreamy, pastel, illustration')">🎀 Aquarelle</span>
+    </div>
+  </div>
 
-    <!-- Prompt -->
-    <div class="card">
-      <div class="card-title">Prompt</div>
-      <textarea id="prompt" placeholder="Décris l'image en détail…&#10;Ex: portrait of a young woman in a dark forest, cinematic lighting, photorealistic, 8k"></textarea>
+  <!-- Settings -->
+  <div class="card">
+    <div class="label">Paramètres</div>
+    <div class="row">
+      <select id="model">
+        <option value="flux">flux ∞ GRATUIT</option>
+        <option value="flux-realism">flux-realism ∞</option>
+        <option value="flux-anime">flux-anime ∞</option>
+        <option value="flux-3d">flux-3d ∞</option>
+        <option value="turbo">turbo ⚡</option>
+      </select>
 
-      <!-- Style presets -->
-      <div style="margin-top:12px; margin-bottom:6px;">
-        <div class="card-title">Styles rapides</div>
-        <div class="presets">
-          <span class="preset" onclick="addStyle('cinematic lighting, photorealistic, 8k, sharp focus')">📷 Photo</span>
-          <span class="preset" onclick="addStyle('digital art, concept art, artstation, highly detailed')">🎨 Digital Art</span>
-          <span class="preset" onclick="addStyle('anime style, vibrant colors, studio ghibli')">🌸 Anime</span>
-          <span class="preset" onclick="addStyle('cyberpunk, neon lights, futuristic city, blade runner')">🌆 Cyberpunk</span>
-          <span class="preset" onclick="addStyle('oil painting, impressionist, museum quality')">🖼️ Peinture</span>
-          <span class="preset" onclick="addStyle('fantasy art, epic, magical, ethereal')">✨ Fantasy</span>
-          <span class="preset" onclick="addStyle('minimalist, clean, white background, product photo')">⬜ Minimal</span>
-          <span class="preset" onclick="addStyle('3d render, octane render, hyperrealistic')">🔷 3D</span>
+      <select id="ratio">
+        <option value="1024x1024">1:1 Carré</option>
+        <option value="1344x768">16:9 Paysage</option>
+        <option value="768x1344">9:16 Portrait</option>
+        <option value="1152x896">4:3</option>
+        <option value="1536x1024" selected>3:2 Large</option>
+      </select>
+
+      <div>
+        <div class="label" style="margin-bottom:4px">Nombre</div>
+        <div class="count-btns">
+          <div class="cbtn on" data-n="1" onclick="setCount(1)">1</div>
+          <div class="cbtn" data-n="2" onclick="setCount(2)">2</div>
+          <div class="cbtn" data-n="4" onclick="setCount(4)">4</div>
         </div>
+      </div>
+
+      <div class="seed-row">
+        <label>Seed</label>
+        <input type="number" id="seed" placeholder="aléatoire" min="0" max="999999">
+        <button class="btn-rand" onclick="rndSeed()" title="Seed aléatoire">🎲</button>
       </div>
     </div>
 
-    <!-- Settings -->
-    <div class="card">
-      <div class="card-title">Paramètres</div>
-      <div class="row">
-        <select id="model">
-          <option value="flux">flux ∞ GRATUIT</option>
-          <option value="flux-realism">flux-realism ∞ GRATUIT</option>
-          <option value="flux-anime">flux-anime ∞ GRATUIT</option>
-          <option value="flux-3d">flux-3d ∞ GRATUIT</option>
-          <option value="turbo">turbo ⚡ rapide</option>
-        </select>
-
-        <select id="ratio">
-          <option value="1024x1024">1:1 Carré</option>
-          <option value="1344x768">16:9 Paysage</option>
-          <option value="768x1344">9:16 Portrait</option>
-          <option value="1152x896">4:3 Standard</option>
-          <option value="1216x832">3:2 Photo</option>
-          <option value="1536x1024" selected>3:2 Large</option>
-        </select>
-
-        <div class="toggle-group">
-          <div class="toggle on" id="tog-enhance" onclick="toggleOpt('enhance')">✨ Enhance</div>
-          <div class="toggle on" id="tog-nologo" onclick="toggleOpt('nologo')">🚫 Logo</div>
-        </div>
-
-        <button class="btn-gen" id="gen-btn" onclick="generate()">Générer ↗</button>
+    <div class="row" style="margin-top:12px">
+      <div class="toggles">
+        <div class="tog on" id="tog-enhance" onclick="togOpt('enhance')">✨ Enhance</div>
+        <div class="tog on" id="tog-nologo" onclick="togOpt('nologo')">🚫 Logo</div>
       </div>
+      <button class="btn-gen" id="gen-btn" onclick="generate()">Générer ↗</button>
     </div>
-
   </div>
 
   <!-- Output -->
-  <div class="output-area" style="margin-top:18px;">
-    <div class="status-bar" id="status">Entre un prompt et clique sur Générer · Ctrl+Entrée</div>
-    <div class="img-wrapper">
-      <div class="spinner" id="spinner">
-        <div class="spin-ring"></div>
-        <div class="spin-text" id="spin-text">Génération en cours…</div>
-      </div>
-      <img id="output-img" alt="Image générée">
+  <div class="card" id="out-card" style="display:none">
+    <div class="out-header">
+      <div class="status-bar" id="status"></div>
     </div>
-    <div class="actions">
-      <a id="btn-dl" class="btn-action" download="pollinations.jpg">⬇ Télécharger</a>
-      <span id="btn-regen" class="btn-action" style="cursor:pointer" onclick="generate()">🔄 Regénérer</span>
-      <span id="btn-vary" class="btn-action" style="cursor:pointer" onclick="vary()">🎲 Variation</span>
-    </div>
+    <div class="img-grid n1" id="img-grid"></div>
   </div>
 
-  <script>
-    const API_KEY = "sk_Wn9j2Z5qOdd4gyH4M6H7M7XzT4lgnRmL";
-    const opts = { enhance: true, nologo: true };
-    let lastPrompt = "";
+  <!-- Gallery -->
+  <div class="card">
+    <div class="gal-header">
+      <div class="label" style="margin:0">Galerie — <span id="gal-count">0</span> image(s)</div>
+      <button class="btn-clear" onclick="clearGallery()">🗑 Effacer tout</button>
+    </div>
+    <div id="gallery"><div class="gal-empty">Génère des images pour les voir apparaître ici.</div></div>
+  </div>
+</div>
 
-    function toggleOpt(k) {
-      opts[k] = !opts[k];
-      document.getElementById('tog-' + k).classList.toggle('on', opts[k]);
-    }
+<!-- Modal -->
+<div class="modal" id="modal" onclick="closeModal(event)">
+  <div class="modal-inner" style="position:relative">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <img id="modal-img" src="" alt="">
+    <div class="modal-prompt" id="modal-prompt"></div>
+    <div class="modal-actions">
+      <a id="modal-dl" class="ic-btn" download="image.jpg">⬇ Télécharger</a>
+      <button class="ic-btn" id="modal-reuse" onclick="reusePrompt()">↩ Réutiliser prompt</button>
+      <button class="ic-btn" id="modal-seed" onclick="reuseSeed()">🎯 Réutiliser seed</button>
+    </div>
+  </div>
+</div>
 
-    function addStyle(s) {
-      const ta = document.getElementById('prompt');
-      const v = ta.value.trim();
-      ta.value = v ? v + ', ' + s : s;
-      ta.focus();
-    }
+<script>
+const API_KEY = "sk_Wn9j2Z5qOdd4gyH4M6H7M7XzT4lgnRmL";
+const opts = {enhance:true, nologo:true};
+let count = 1;
+let gallery = JSON.parse(localStorage.getItem('imgGallery') || '[]');
+let modalData = null;
 
-    function buildUrl(prompt, seed) {
-      const [w, h] = document.getElementById('ratio').value.split('x');
-      const model  = document.getElementById('model').value;
-      const params = new URLSearchParams({
-        model, width: w, height: h, seed,
-        token: API_KEY,
-        enhance: opts.enhance ? 'true' : 'false',
-        nologo:  opts.nologo  ? 'true' : 'false',
-      });
-      return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params}`;
-    }
+// ── Toggles & helpers ──
+function togOpt(k){
+  opts[k]=!opts[k];
+  document.getElementById('tog-'+k).classList.toggle('on',opts[k]);
+}
+function setCount(n){
+  count=n;
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.toggle('on',+b.dataset.n===n));
+  const g=document.getElementById('img-grid');
+  g.className='img-grid '+(n===1?'n1':n===2?'n2':'n4');
+}
+function rndSeed(){document.getElementById('seed').value=Math.floor(Math.random()*999999);}
+function ap(s){const t=document.getElementById('prompt');t.value=(t.value.trim()?t.value.trim()+', ':'')+s;t.focus();}
 
-    function generate(seed) {
-      const prompt = document.getElementById('prompt').value.trim();
-      if (!prompt) { document.getElementById('prompt').focus(); return; }
-      lastPrompt = prompt;
-      doGen(prompt, seed ?? Math.floor(Math.random() * 999999));
-    }
+// ── Build URL ──
+function buildUrl(prompt,neg,seed){
+  const [w,h]=document.getElementById('ratio').value.split('x');
+  const model=document.getElementById('model').value;
+  const p = new URLSearchParams({
+    model,width:w,height:h,seed,token:API_KEY,
+    enhance:opts.enhance?'true':'false',
+    nologo:opts.nologo?'true':'false',
+  });
+  if(neg) p.set('negative_prompt',neg);
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${p}`;
+}
 
-    function vary() {
-      if (!lastPrompt) return;
-      doGen(lastPrompt, Math.floor(Math.random() * 999999));
-    }
+// ── Generate ──
+function generate(){
+  const prompt=document.getElementById('prompt').value.trim();
+  if(!prompt){document.getElementById('prompt').focus();return;}
+  const neg=document.getElementById('neg').value.trim();
+  const seedVal=document.getElementById('seed').value;
 
-    function doGen(prompt, seed) {
-      const img     = document.getElementById('output-img');
-      const spinner = document.getElementById('spinner');
-      const status  = document.getElementById('status');
-      const btn     = document.getElementById('gen-btn');
-      const [w, h]  = document.getElementById('ratio').value.split('x');
+  document.getElementById('out-card').style.display='block';
+  const grid=document.getElementById('img-grid');
+  grid.innerHTML='';
+  setCount(count);
 
-      img.style.display = 'none';
-      ['btn-dl','btn-regen','btn-vary'].forEach(id => document.getElementById(id).style.display = 'none');
-      spinner.style.display = 'flex';
-      document.getElementById('spin-text').textContent = 'Génération en cours…';
-      status.textContent = '';
-      btn.disabled = true;
+  const btn=document.getElementById('gen-btn');
+  btn.disabled=true;
+  let done=0;
 
-      const url = buildUrl(prompt, seed);
+  const seeds=[];
+  for(let i=0;i<count;i++){
+    const s=seedVal?parseInt(seedVal)+i:Math.floor(Math.random()*999999);
+    seeds.push(s);
+    const url=buildUrl(prompt,neg,s);
+    const cell=makeCell(i,url,prompt,s);
+    grid.appendChild(cell);
+  }
 
-      // Progress hint
-      let dots = 0;
-      const timer = setInterval(() => {
-        dots = (dots + 1) % 4;
-        document.getElementById('spin-text').textContent = 'Génération en cours' + '.'.repeat(dots + 1);
-      }, 600);
+  document.getElementById('status').textContent='Génération en cours…';
 
-      img.onload = () => {
-        clearInterval(timer);
-        spinner.style.display = 'none';
-        img.style.display = 'block';
-        const model = document.getElementById('model').value;
-        status.innerHTML = `✅ ${w}×${h} — <b>${model}</b> — seed ${seed}`;
-        document.getElementById('btn-dl').href = url;
-        ['btn-dl','btn-regen','btn-vary'].forEach(id => document.getElementById(id).style.display = 'inline-block');
-        btn.disabled = false;
-      };
+  // Track completion
+  grid.querySelectorAll('img[data-url]').forEach(img=>{
+    img.onload=()=>{
+      done++;
+      document.getElementById('status').textContent=`${done}/${count} image(s) générée(s)`;
+      img.closest('.img-cell').querySelector('.cell-spin').style.display='none';
+      img.style.display='block';
+      saveToGallery(img.src, prompt, seeds[+img.dataset.idx]);
+      if(done===count) btn.disabled=false;
+    };
+    img.onerror=()=>{
+      done++;
+      img.closest('.img-cell').querySelector('.cell-spin').innerHTML='<div style="color:#f87171;font-size:.82rem">❌ Erreur</div>';
+      if(done===count) btn.disabled=false;
+    };
+  });
 
-      img.onerror = () => {
-        clearInterval(timer);
-        spinner.style.display = 'none';
-        status.textContent = '❌ Erreur. Réessaie ou change le modèle.';
-        btn.disabled = false;
-      };
+  document.getElementById('prompt').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 
-      img.src = url;
-    }
+function makeCell(idx,url,prompt,seed){
+  const cell=document.createElement('div');
+  cell.className='img-cell';
+  cell.innerHTML=`
+    <div class="cell-spin"><div class="spin-ring"></div><div class="spin-txt">Génération…</div></div>
+    <img data-url="${url}" data-idx="${idx}" data-prompt="${prompt.replace(/"/g,'&quot;')}" data-seed="${seed}" src="" alt="" style="display:none">
+    <div class="cell-info">
+      <span class="seed-badge" title="Cliquer pour copier le seed" onclick="copySeed(${seed})">seed: ${seed}</span>
+      <div class="cell-actions">
+        <a class="ic-btn" href="${url}" download="image_${seed}.jpg">⬇</a>
+        <button class="ic-btn" onclick="openModal('${url}','${prompt.replace(/'/g,"\\'")}',${seed})">⛶</button>
+      </div>
+    </div>`;
+  // Start loading
+  setTimeout(()=>{
+    const img=cell.querySelector('img');
+    img.src=url;
+  },idx*200);
+  return cell;
+}
 
-    document.getElementById('prompt').addEventListener('keydown', e => {
-      if (e.ctrlKey && e.key === 'Enter') generate();
-    });
-  </script>
+function copySeed(s){
+  navigator.clipboard.writeText(String(s)).catch(()=>{});
+  document.getElementById('seed').value=s;
+}
+
+// ── Gallery ──
+function saveToGallery(url,prompt,seed){
+  gallery.unshift({url,prompt,seed,ts:Date.now()});
+  if(gallery.length>50) gallery=gallery.slice(0,50);
+  localStorage.setItem('imgGallery',JSON.stringify(gallery));
+  renderGallery();
+}
+
+function renderGallery(){
+  const el=document.getElementById('gallery');
+  document.getElementById('gal-count').textContent=gallery.length;
+  if(!gallery.length){el.innerHTML='<div class="gal-empty">Génère des images pour les voir apparaître ici.</div>';return;}
+  el.innerHTML='<div class="gal-grid">'+gallery.map((g,i)=>`
+    <div class="gal-item" onclick="openModal('${g.url}','${g.prompt.replace(/'/g,"\\'")}',${g.seed})">
+      <img src="${g.url}" alt="" loading="lazy">
+      <div class="gal-meta">${g.prompt.substring(0,50)}…</div>
+    </div>`).join('')+'</div>';
+}
+
+function clearGallery(){
+  if(!confirm('Effacer toute la galerie ?')) return;
+  gallery=[];
+  localStorage.removeItem('imgGallery');
+  renderGallery();
+}
+
+// ── Modal ──
+function openModal(url,prompt,seed){
+  modalData={url,prompt,seed};
+  document.getElementById('modal-img').src=url;
+  document.getElementById('modal-prompt').textContent='Prompt: '+prompt+' | seed: '+seed;
+  document.getElementById('modal-dl').href=url;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById('modal')) document.getElementById('modal').classList.remove('open');
+}
+function reusePrompt(){
+  document.getElementById('prompt').value=modalData.prompt;
+  closeModal();
+}
+function reuseSeed(){
+  document.getElementById('seed').value=modalData.seed;
+  closeModal();
+}
+
+// ── Keyboard ──
+document.getElementById('prompt').addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter') generate();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape') document.getElementById('modal').classList.remove('open');});
+
+// ── Init ──
+renderGallery();
+
+// ── PWA SW ──
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
 </body>
 </html>
