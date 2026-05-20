@@ -199,7 +199,7 @@
 const API_KEY = "sk_Wn9j2Z5qOdd4gyH4M6H7M7XzT4lgnRmL";
 const opts = {enhance:true, nologo:true};
 let count = 1;
-let gallery = JSON.parse(localStorage.getItem('imgGallery') || '[]');
+let gallery = (()=>{try{return JSON.parse(localStorage.getItem('imgGallery')||'[]');}catch(e){return [];}})();
 let modalData = null;
 
 // ── Toggles & helpers ──
@@ -320,14 +320,22 @@ function saveToGallery(url,prompt,seed){
 }
 
 function renderGallery(){
-  const el=document.getElementById('gallery');
-  document.getElementById('gal-count').textContent=gallery.length;
-  if(!gallery.length){el.innerHTML='<div class="gal-empty">Génère des images pour les voir apparaître ici.</div>';return;}
-  el.innerHTML='<div class="gal-grid">'+gallery.map((g,i)=>`
-    <div class="gal-item" onclick="openModal('${g.url}','${g.prompt.replace(/'/g,"\\'")}',${g.seed})">
-      <img src="${g.url}" alt="" loading="lazy">
-      <div class="gal-meta">${g.prompt.substring(0,50)}…</div>
-    </div>`).join('')+'</div>';
+  try{
+    const el=document.getElementById('gallery');
+    document.getElementById('gal-count').textContent=gallery.length;
+    if(!gallery.length){el.innerHTML='<div class="gal-empty">Génère des images pour les voir apparaître ici.</div>';return;}
+    el.innerHTML='<div class="gal-grid">'+gallery.map((g,idx)=>{
+      const safePrompt=(g.prompt||'').substring(0,50);
+      return `<div class="gal-item" data-idx="${idx}">
+        <img src="${g.url||''}" alt="" loading="lazy">
+        <div class="gal-meta">${safePrompt}…</div>
+      </div>`;
+    }).join('')+'</div>';
+    el.querySelectorAll('.gal-item').forEach(item=>{
+      const g=gallery[+item.dataset.idx];
+      item.onclick=()=>openModal(g.url,g.prompt,g.seed);
+    });
+  }catch(e){console.warn('Gallery render error',e);}
 }
 
 function clearGallery(){

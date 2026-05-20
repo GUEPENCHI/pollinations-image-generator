@@ -1,4 +1,4 @@
-const CACHE = 'imggen-v1';
+const CACHE = 'imggen-v3';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
