@@ -268,25 +268,41 @@ function generate(){
       </div>`;
     grid.appendChild(cell);
 
-    // Start image load immediately (closure captures correct url, s, cell)
-    (function(imgCell, imgUrl, seed){
+    // Stagger requests by 3s each to avoid rate limiting
+    (function(imgCell, imgUrl, seed, delay){
+      const spin=imgCell.querySelector('.cell-spin');
       const img=imgCell.querySelector('img');
-      img.onload=()=>{
-        imgCell.querySelector('.cell-spin').style.display='none';
-        imgCell.querySelector('.cell-info').style.display='flex';
-        img.style.display='block';
-        done++;
-        document.getElementById('status').textContent=`${done} / ${n} générée(s)`;
-        saveToGallery(imgUrl, prompt, seed);
-        if(done===n) btn.disabled=false;
-      };
-      img.onerror=()=>{
-        imgCell.querySelector('.cell-spin').innerHTML='<div style="color:#f87171;font-size:.82rem;text-align:center">❌ Erreur<br><small>Réessaie</small></div>';
-        done++;
-        if(done===n) btn.disabled=false;
-      };
-      img.src=imgUrl;
-    })(cell, url, s);
+
+      // Show countdown while waiting
+      let remaining=Math.round(delay/1000);
+      const ticker=remaining>0?setInterval(()=>{
+        remaining--;
+        const txt=imgCell.querySelector('.spin-txt');
+        if(txt) txt.textContent=remaining>0?`Attente ${remaining}s…`:'Génération…';
+      },1000):null;
+
+      setTimeout(()=>{
+        if(ticker) clearInterval(ticker);
+        const txt=imgCell.querySelector('.spin-txt');
+        if(txt) txt.textContent='Génération…';
+
+        img.onload=()=>{
+          spin.style.display='none';
+          imgCell.querySelector('.cell-info').style.display='flex';
+          img.style.display='block';
+          done++;
+          document.getElementById('status').textContent=`${done} / ${n} générée(s)`;
+          saveToGallery(imgUrl, prompt, seed);
+          if(done===n) btn.disabled=false;
+        };
+        img.onerror=()=>{
+          spin.innerHTML='<div style="color:#f87171;font-size:.82rem;text-align:center">❌ Erreur<br><small>Réessaie</small></div>';
+          done++;
+          if(done===n) btn.disabled=false;
+        };
+        img.src=imgUrl;
+      }, delay);
+    })(cell, url, s, i * 3000);
   }
 }
 
