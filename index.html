@@ -235,66 +235,59 @@ function generate(){
   if(!prompt){document.getElementById('prompt').focus();return;}
   const neg=document.getElementById('neg').value.trim();
   const seedVal=document.getElementById('seed').value;
+  const n=count;
 
   document.getElementById('out-card').style.display='block';
   const grid=document.getElementById('img-grid');
+  // Set grid layout BEFORE adding cells
+  grid.className='img-grid '+(n===1?'n1':n===2?'n2':'n4');
   grid.innerHTML='';
-  setCount(count);
 
   const btn=document.getElementById('gen-btn');
   btn.disabled=true;
   let done=0;
 
-  const seeds=[];
-  for(let i=0;i<count;i++){
+  document.getElementById('status').textContent=`0 / ${n} générée(s)…`;
+
+  for(let i=0;i<n;i++){
     const s=seedVal?parseInt(seedVal)+i:Math.floor(Math.random()*999999);
-    seeds.push(s);
     const url=buildUrl(prompt,neg,s);
-    const cell=makeCell(i,url,prompt,s);
+
+    // Build cell HTML
+    const cell=document.createElement('div');
+    cell.className='img-cell';
+    cell.innerHTML=`
+      <div class="cell-spin"><div class="spin-ring"></div><div class="spin-txt">Génération…</div></div>
+      <img alt="" style="display:none">
+      <div class="cell-info" style="display:none">
+        <span class="seed-badge" onclick="copySeed(${s})">seed: ${s}</span>
+        <div class="cell-actions">
+          <a class="ic-btn" href="${url}" download="image_${s}.jpg">⬇</a>
+          <button class="ic-btn" onclick="openModal('${url}','${prompt.replace(/'/g,"\\'")}',${s})">⛶</button>
+        </div>
+      </div>`;
     grid.appendChild(cell);
+
+    // Start image load immediately (closure captures correct url, s, cell)
+    (function(imgCell, imgUrl, seed){
+      const img=imgCell.querySelector('img');
+      img.onload=()=>{
+        imgCell.querySelector('.cell-spin').style.display='none';
+        imgCell.querySelector('.cell-info').style.display='flex';
+        img.style.display='block';
+        done++;
+        document.getElementById('status').textContent=`${done} / ${n} générée(s)`;
+        saveToGallery(imgUrl, prompt, seed);
+        if(done===n) btn.disabled=false;
+      };
+      img.onerror=()=>{
+        imgCell.querySelector('.cell-spin').innerHTML='<div style="color:#f87171;font-size:.82rem;text-align:center">❌ Erreur<br><small>Réessaie</small></div>';
+        done++;
+        if(done===n) btn.disabled=false;
+      };
+      img.src=imgUrl;
+    })(cell, url, s);
   }
-
-  document.getElementById('status').textContent='Génération en cours…';
-
-  // Track completion
-  grid.querySelectorAll('img[data-url]').forEach(img=>{
-    img.onload=()=>{
-      done++;
-      document.getElementById('status').textContent=`${done}/${count} image(s) générée(s)`;
-      img.closest('.img-cell').querySelector('.cell-spin').style.display='none';
-      img.style.display='block';
-      saveToGallery(img.src, prompt, seeds[+img.dataset.idx]);
-      if(done===count) btn.disabled=false;
-    };
-    img.onerror=()=>{
-      done++;
-      img.closest('.img-cell').querySelector('.cell-spin').innerHTML='<div style="color:#f87171;font-size:.82rem">❌ Erreur</div>';
-      if(done===count) btn.disabled=false;
-    };
-  });
-
-  document.getElementById('prompt').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function makeCell(idx,url,prompt,seed){
-  const cell=document.createElement('div');
-  cell.className='img-cell';
-  cell.innerHTML=`
-    <div class="cell-spin"><div class="spin-ring"></div><div class="spin-txt">Génération…</div></div>
-    <img data-url="${url}" data-idx="${idx}" data-prompt="${prompt.replace(/"/g,'&quot;')}" data-seed="${seed}" src="" alt="" style="display:none">
-    <div class="cell-info">
-      <span class="seed-badge" title="Cliquer pour copier le seed" onclick="copySeed(${seed})">seed: ${seed}</span>
-      <div class="cell-actions">
-        <a class="ic-btn" href="${url}" download="image_${seed}.jpg">⬇</a>
-        <button class="ic-btn" onclick="openModal('${url}','${prompt.replace(/'/g,"\\'")}',${seed})">⛶</button>
-      </div>
-    </div>`;
-  // Start loading
-  setTimeout(()=>{
-    const img=cell.querySelector('img');
-    img.src=url;
-  },idx*200);
-  return cell;
 }
 
 function copySeed(s){
